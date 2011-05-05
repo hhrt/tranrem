@@ -20,11 +20,15 @@ class TransmRpcSession : public QObject {
   public:
   TransmRpcSession(QString h, QString p, QString u);
   void setConnectionSettings(QString h, QString p, QString u);
-  int getTorrentsList(std::vector<std::string> fileds, unsigned int *ids = NULL);
-  TorrentsList content() const;
+  int getTorrentsList(unsigned int *ids = NULL);
+  std::vector<Torrent> *torrents();
+  unsigned int tag(); //Last response tag field
+  QString result(); //Last response result field
+  QStringList *fields();
+
 
   private:
-  TorrentsList torrentsList;
+  std::vector<Torrent> Torrents;
   QHttp *http;
   QBuffer *response;
   QString transmSessionId;
@@ -34,7 +38,10 @@ class TransmRpcSession : public QObject {
   QString url;
   QHttpRequestHeader requestHeader;
   QBuffer *requestBody;
-
+  unsigned int Tag;
+  QString Result;
+  QStringList Fields;
+  
   bool parseRequestData();
 
   private slots:

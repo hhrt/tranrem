@@ -16,6 +16,8 @@ class MainWindow : public QMainWindow {
   QAction *exitAction; 
   TransmRpcSession *session;
 
+  void addItem(int i, int j, QString value);
+
   public:
   MainWindow();
   void setGeometry();

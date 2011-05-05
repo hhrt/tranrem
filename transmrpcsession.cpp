@@ -4,8 +4,8 @@
 #include <QHttp>
 #include "torrent.h"
 #include <QBuffer>
-#include<sstream>
-#include<QDebug>
+#include <sstream>
+#include <QDebug>
 
 TransmRpcSession::TransmRpcSession(QString h = "127.0.0.1", QString p = "9091", QString u = "/transmission/rpc/") {
   if(h != NULL) host = h;
@@ -20,6 +20,9 @@ TransmRpcSession::TransmRpcSession(QString h = "127.0.0.1", QString p = "9091", 
   requestBody = new QBuffer;
   transmSessionId = "";
   http->setHost(host, port.toInt());
+  Fields.push_back("id");
+  Fields.push_back("name");
+  Fields.push_back("totalSize");
 };
 
 void TransmRpcSession::setConnectionSettings(QString h = NULL, QString p = NULL, QString u = NULL) {
@@ -29,14 +32,14 @@ void TransmRpcSession::setConnectionSettings(QString h = NULL, QString p = NULL,
   http->setHost(host, port.toInt());
 };
 
-int TransmRpcSession::getTorrentsList(std::vector<std::string> fields, unsigned int *ids){
+int TransmRpcSession::getTorrentsList(unsigned int *ids){
   //json request genereting
   std::ostringstream requestBodyTmp;//Fucking std::string doesn't concatenates with int!!!
   requestBodyTmp << "{ \"arguments\" : { \"fields\" : [ ";
   unsigned int i;
-  for(i=0;i<fields.size()-1;i++) 
-    requestBodyTmp << "\"" << fields[i] << "\", ";
-  requestBodyTmp << "\"" << fields[i] << "\" ]";
+  for(i=0;i<Fields.size()-1;i++) 
+    requestBodyTmp << "\"" << Fields[i].toAscii().data() << "\", ";
+  requestBodyTmp << "\"" << Fields[i].toAscii().data() << "\" ]";
   if(ids != NULL) {
     requestBodyTmp << ", \"ids\" : [ ";
     for(i=0;i<(sizeof(ids)/sizeof(int))-1;i++)
@@ -73,8 +76,8 @@ void TransmRpcSession::dataReceived(bool error) {
 	  response->seek(0);
       if(parseRequestData())
         emit requestComplete();
-	  else
-		emit errorSignal(parsingError);
+	    else
+		    emit errorSignal(parsingError);
 	  break;
 	  default:
 	  qDebug() << "Response status code: " << http->lastResponse().statusCode();
@@ -106,18 +109,30 @@ bool TransmRpcSession::parseRequestData() {
 
   Torrent *torrent;
 
-  *torrentsList.result() = root.get("result", "none").asString();
-  *torrentsList.tag() = root.get("tag", "0").asUInt();
+  Result = root.get("result", "none").asString().c_str();
+  Tag = root.get("tag", "0").asUInt();
 
   unsigned int i;
   for(i=0;i<torrentsValue.size();i++) {
     torrent = new Torrent(torrentsValue[i]);
-	torrentsList.torrents()->push_back(*torrent);
-	delete torrent;
+	  Torrents.push_back(*torrent);
+	  delete torrent;
   }
   return true;
 };
 
-TorrentsList TransmRpcSession::content() const {
-  return torrentsList;
+std::vector<Torrent> *TransmRpcSession::torrents(){
+  return &Torrents;
+};
+
+unsigned int TransmRpcSession::tag() {
+  return Tag;
+};
+
+QString TransmRpcSession::result() {
+  return Result;
+};
+
+QStringList *TransmRpcSession::fields() {
+  return &Fields;
 };

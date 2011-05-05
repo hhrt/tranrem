@@ -17,6 +17,7 @@ class Torrent {
   Torrent(Json::Value j);
   Torrent();
   unsigned int id();
+  std::string idS();
   std::string size();
   std::string name();
 
@@ -27,22 +28,5 @@ class Torrent {
   bool operator==(Torrent b);
   bool operator<(Torrent b);
 };
-
-//template <class T>
-class TorrentsList {
-
-  private:
-  std::string Result;
-  unsigned int Tag;
-  std::vector<Torrent> Torrents;
-  
-  public:
-  TorrentsList(std::string result, unsigned int tag);
-  TorrentsList();
-  std::string *result();
-  unsigned int *tag();
-  std::vector<Torrent> *torrents();
-};
-
 
 #endif
