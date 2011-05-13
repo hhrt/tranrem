@@ -20,9 +20,17 @@ TransmRpcSession::TransmRpcSession(QString h = "127.0.0.1", QString p = "9091", 
   requestBody = new QBuffer;
   transmSessionId = "";
   http->setHost(host, port.toInt());
+
   Fields.push_back("id");
   Fields.push_back("name");
   Fields.push_back("totalSize");
+  Fields.push_back("files");
+  Fields.push_back("peers");
+  Fields.push_back("peersConnected");
+  Fields.push_back("peersGettingFromUs");
+  Fields.push_back("peersSendingToUs");
+  Fields.push_back("percentDone");
+
 };
 
 void TransmRpcSession::setConnectionSettings(QString h = NULL, QString p = NULL, QString u = NULL) {
@@ -36,15 +44,16 @@ int TransmRpcSession::getTorrentsList(unsigned int *ids){
   //json request genereting
   std::ostringstream requestBodyTmp;//Fucking std::string doesn't concatenates with int!!!
   requestBodyTmp << "{ \"arguments\" : { \"fields\" : [ ";
-  unsigned int i;
+  int i;
+  unsigned int j;
   for(i=0;i<Fields.size()-1;i++) 
     requestBodyTmp << "\"" << Fields[i].toAscii().data() << "\", ";
   requestBodyTmp << "\"" << Fields[i].toAscii().data() << "\" ]";
-  if(ids != NULL) {
+  if(ids != NULL) { //not test, may be bugged
     requestBodyTmp << ", \"ids\" : [ ";
-    for(i=0;i<(sizeof(ids)/sizeof(int))-1;i++)
-      requestBodyTmp << ids[i] << ", ";
-    requestBodyTmp << ids[i] <<" ]";
+    for(j=0;j<(sizeof(ids)/sizeof(int))-1;j++)
+      requestBodyTmp << ids[j] << ", ";
+    requestBodyTmp << ids[j] <<" ]";
   }
   requestBodyTmp << " }, ";
   requestBodyTmp << "\"method\" : \"torrent-get\",\n \"tag\" : " << TORRENTSLIST << " }";

@@ -6,20 +6,38 @@
 #include <json/json.h>
 #include <ctime>
 
+struct FileStruct {
+  std::string name;
+  unsigned long int length;
+  unsigned long int bytesCompleted;
+};
+
 class Torrent {
 
   unsigned int Id;
-  double Size;
+  unsigned long int Size;
   std::string Name;
+  std::vector<FileStruct> Files;
+  unsigned int PeersConnected;
+  unsigned int PeersGettingFromUs;
+  unsigned int PeersSendingToUs;
+  double PercentDone;
 
   public:
-  Torrent(int i, double s, std::string n);
+  Torrent(int i, unsigned long int s, std::string n);
   Torrent(Json::Value j);
   Torrent();
   unsigned int id();
   std::string idS();
   std::string size();
   std::string name();
+  std::string downloadedSize();
+  std::string sizeInHumanReadable(unsigned long int size);
+  std::string peersInfo();
+  std::string peersConnected();
+  std::string peersGettingFromUs();
+  std::string peersSendingToUs();
+  std::string percentDone();
 
   void set_id(int i);
   void set_size(double s);

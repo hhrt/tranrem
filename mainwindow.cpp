@@ -31,19 +31,40 @@ MainWindow::MainWindow() {
   connect(session, SIGNAL(errorSignal(int)), this, SLOT(errorHandler(int)));
   connect(session, SIGNAL(requestComplete()), this, SLOT(successHandler()));
 
-  torrentsTable->setHorizontalHeaderLabels(*session->fields());
+  qDebug() << "Fields: " << session->fields()->size();
+
+  torrentsTable->setColumnCount(4);
+  QStringList labels;
+  labels.push_back("ID");
+  labels.push_back("Name");
+  labels.push_back("Progress");
+  labels.push_back("Peers");
+  torrentsTable->setHorizontalHeaderLabels(labels);
+  torrentsTable->verticalHeader()->hide();
+
+  torrentsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+  qDebug() << "Headers:" << torrentsTable->columnCount();
 
   int i;
   int fontSize;
 
-  for(i=0;i < session->fields()->size();i++) {
+  for(i=0;i < torrentsTable->columnCount();i++) {
     fontSize = torrentsTable->horizontalHeaderItem(i)->font().pointSize() != -1 ? torrentsTable->horizontalHeaderItem(i)->font().pointSize() : torrentsTable->horizontalHeaderItem(i)->font().pixelSize();
-    torrentsTable->setColumnWidth(i, fontSize * (session->fields()->at(i).size()+2) );
+    torrentsTable->setColumnWidth(i, fontSize * ( torrentsTable->horizontalHeaderItem(i)->text().size() + 2 ));
   }
 
   session->getTorrentsList();
 
 };
+
+/*void MainWindow::disableTableEditing() {
+  int i, j;
+  for(i=0;i<torrentsTable->rowCount();i++) {
+    for(j=0,j<torrentsTable->columnCount();j++) 
+      torrentsTable->item(i, j)->setFlags(torrentsTable->item(i, j)->flags() & (~Qt::ItemIsEditable));
+  }
+};*/
 
 void MainWindow::errorHandler(int errorCode) {
 
@@ -70,13 +91,18 @@ void MainWindow::errorHandler(int errorCode) {
 };
 
 void MainWindow::successHandler() {
-  statusBar()->showMessage("Request complete.");
-  torrentsTable->setRowCount(session->torrents()->size());
-  int i;
-  for(i=0;i < session->torrents()->size(); i++) {
-    addItem(i, 0, session->torrents()->at(i).idS().c_str());
-    addItem(i, 1, session->torrents()->at(i).name().c_str());
-    addItem(i, 2, session->torrents()->at(i).size().c_str());
+  switch(session->tag()) {
+    case TORRENTSLIST:
+    statusBar()->showMessage("Torrent list recieved.");
+    torrentsTable->setRowCount(session->torrents()->size());
+    unsigned int i;
+    for(i=0;i < session->torrents()->size(); i++) {
+      addItem(i, 0, session->torrents()->at(i).idS().c_str());
+      addItem(i, 1, session->torrents()->at(i).name().c_str());
+      addItem(i, 2, (session->torrents()->at(i).downloadedSize() + "/ " + session->torrents()->at(i).size() + "(" + session->torrents()->at(i).percentDone() + ")").c_str());
+      addItem(i, 3, session->torrents()->at(i).peersInfo().c_str());
+    }
+    break;
   }
 };
 
@@ -93,6 +119,5 @@ void MainWindow::addItem(int i, int j, QString value) {
   if((value.size()+2)*fontSize > torrentsTable->columnWidth(j))
     torrentsTable->setColumnWidth(j, (value.size())*fontSize);
 
-  statusBar()->showMessage(QString::number(fontSize, 10) + ":" + QString::number(value.size(), 10));
 };
 
