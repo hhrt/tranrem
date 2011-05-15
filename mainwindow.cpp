@@ -27,7 +27,7 @@ MainWindow::MainWindow() {
   move(30, 50);
  //---
 
-  session = new TransmRpcSession("127.0.0.1", "9091", "/transmission/rpc");
+  session = new TransmRpcSession("fry", "9091", "/transmission/rpc");
   connect(session, SIGNAL(errorSignal(int)), this, SLOT(errorHandler(int)));
   connect(session, SIGNAL(requestComplete()), this, SLOT(successHandler()));
 
@@ -98,26 +98,30 @@ void MainWindow::successHandler() {
     unsigned int i;
     for(i=0;i < session->torrents()->size(); i++) {
       addItem(i, 0, session->torrents()->at(i).idS().c_str());
+//      addItem(i, 1, session->torrents()->at(i).name().c_str());
       addItem(i, 1, session->torrents()->at(i).name().c_str());
-      addItem(i, 2, (session->torrents()->at(i).downloadedSize() + "/ " + session->torrents()->at(i).size() + "(" + session->torrents()->at(i).percentDone() + ")").c_str());
+      addItem(i, 2, (session->torrents()->at(i).downloadedSize() + "/" + session->torrents()->at(i).size() + " (" + session->torrents()->at(i).percentDone() + ")").c_str());
       addItem(i, 3, session->torrents()->at(i).peersInfo().c_str());
     }
     break;
   }
 };
 
-void MainWindow::addItem(int i, int j, QString value) {
+void MainWindow::addItem(int i, int j, const char *value) {
   int fontSize;
 
-  torrentsTable->setItem(i ,j, new QTableWidgetItem(value));
+  QTextCodec *codec = QTextCodec::codecForName("UTF8");
+  QString str = codec->toUnicode(value);
+
+  torrentsTable->setItem(i ,j, new QTableWidgetItem(str));
 
   if(torrentsTable->item(i, j)->font().pixelSize() == -1)
     fontSize = torrentsTable->item(i, j)->font().pointSize();
   else
     fontSize = torrentsTable->item(i, j)->font().pixelSize();
 
-  if((value.size()+2)*fontSize > torrentsTable->columnWidth(j))
-    torrentsTable->setColumnWidth(j, (value.size())*fontSize);
+  if((str.size()+2)*fontSize > torrentsTable->columnWidth(j))
+    torrentsTable->setColumnWidth(j, (str.size())*fontSize);
 
 };
 

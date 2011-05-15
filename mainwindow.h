@@ -16,7 +16,7 @@ class MainWindow : public QMainWindow {
   QAction *exitAction; 
   TransmRpcSession *session;
 
-  void addItem(int i, int j, QString value);
+  void addItem(int i, int j, const char *value);
 
   public:
   MainWindow();

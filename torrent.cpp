@@ -12,9 +12,10 @@ unsigned long int stringToULInt(std::string str) {
   return i;
 };
 
-std::string numToString(int i) {
+template <class T>
+std::string numToString(T i) {
   std::ostringstream stream;
-  stream << i;
+  stream << std::fixed << std::setprecision(1) << i;
   return stream.str();
 };
 
@@ -37,6 +38,8 @@ Torrent::Torrent(Json::Value j) {
   Id =   j.get("id", "0").asUInt();
   Size = j.get("totalSize", "0").asUInt64();
   Name = j.get("name", "").asString();
+
+qDebug() << "Name: " << Name.c_str();
 
   Json::Value f = j["files"];
 
@@ -102,23 +105,23 @@ std::string Torrent::downloadedSize() {
 };
 
 std::string Torrent::peersConnected() {
-  return numToString(PeersConnected);
+  return numToString<int>(PeersConnected);
 };
 
 std::string Torrent::peersGettingFromUs() {
-  return numToString(PeersGettingFromUs);
+  return numToString<int>(PeersGettingFromUs);
 };
 
 std::string Torrent::peersSendingToUs() {
-  return numToString(PeersSendingToUs); 
+  return numToString<int>(PeersSendingToUs); 
 };
 
 std::string Torrent::percentDone() {
-  return numToString(PercentDone) + "%";
+  return numToString<double>(PercentDone*100) + "%";
 };
 
 std::string Torrent::peersInfo() {
-  return "(" +  numToString(PeersConnected) + ")" + " " + numToString(PeersSendingToUs) + "/" + numToString(PeersGettingFromUs);
+  return "(" +  numToString<int>(PeersConnected) + ")" + " " + numToString<int>(PeersSendingToUs) + "/" + numToString<int>(PeersGettingFromUs);
 };
 
 void Torrent::set_id(int i) {
