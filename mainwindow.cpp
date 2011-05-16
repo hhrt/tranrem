@@ -27,7 +27,10 @@ MainWindow::MainWindow() {
   move(30, 50);
  //---
 
-  session = new TransmRpcSession("fry", "9091", "/transmission/rpc");
+  session = new TransmRpcSession(NULL, NULL, NULL);
+  
+  readSettings();
+
   connect(session, SIGNAL(errorSignal(int)), this, SLOT(errorHandler(int)));
   connect(session, SIGNAL(requestComplete()), this, SLOT(successHandler()));
 
@@ -56,6 +59,52 @@ MainWindow::MainWindow() {
 
   session->getTorrentsList();
 
+};
+
+void MainWindow::readSettings() {
+  QSettings settings("EVNL", "tranrem");
+  QString host;
+  QString port;
+  QString url;
+  bool askUser = false;
+
+  if(settings.contains("host"))
+    host = settings.value("host").toString();
+  else {
+    host = "localhost";
+    askUser = true;
+  }
+  if(settings.contains("port"))
+    port = settings.value("port").toString();
+  else {
+    port = "9091";
+    askUser = true;
+  }
+  if(settings.contains("url"))
+    url = settings.value("url").toString();
+  else {
+    url = "/transmission/rpc";
+    askUser = true;
+  }
+
+  if(askUser) {
+    //filler
+  }
+
+  session->setConnectionSettings(host, port, url);
+
+};
+
+void MainWindow::writeSettings() {
+  QSettings settings("EVNL", "tranrem");
+  settings.setValue("host", session->h());
+  settings.setValue("port", session->p());
+  settings.setValue("url", session->u());
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+  writeSettings();
+  event->accept();
 };
 
 /*void MainWindow::disableTableEditing() {

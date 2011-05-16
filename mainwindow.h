@@ -17,6 +17,11 @@ class MainWindow : public QMainWindow {
   TransmRpcSession *session;
 
   void addItem(int i, int j, const char *value);
+  void readSettings();
+  void writeSettings();
+
+  protected:
+  void closeEvent(QCloseEvent *event);
 
   public:
   MainWindow();

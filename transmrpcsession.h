@@ -25,6 +25,9 @@ class TransmRpcSession : public QObject {
   unsigned int tag(); //Last response tag field
   QString result(); //Last response result field
   QStringList *fields();
+  QString h();
+  QString p();
+  QString u();
 
 
   private:

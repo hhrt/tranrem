@@ -145,3 +145,15 @@ QString TransmRpcSession::result() {
 QStringList *TransmRpcSession::fields() {
   return &Fields;
 };
+
+QString TransmRpcSession::h() {
+  return host;
+};
+
+QString TransmRpcSession::p() {
+  return port;
+};
+
+QString TransmRpcSession::u() {
+  return url;
+};
