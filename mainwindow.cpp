@@ -18,9 +18,13 @@ MainWindow::MainWindow() {
   changeSettingsAction = new QAction(tr("&Settings"), this);
   changeSettingsAction->setShortcut(QKeySequence::Preferences);
   connect(changeSettingsAction, SIGNAL(triggered()), this, SLOT(changeSettings()));
+  refreshTorrentsListAction = new QAction(tr("&Refresh"), this);
+  refreshTorrentsListAction->setShortcut(QKeySequence::Refresh);
+  connect(refreshTorrentsListAction, SIGNAL(triggered()), this, SLOT(refreshTorrentsList()));
 
   fileMenu = menuBar()->addMenu(tr("&File"));
   fileMenu->addAction(changeSettingsAction);
+  fileMenu->addAction(refreshTorrentsListAction);
   fileMenu->addSeparator();
   fileMenu->addAction(exitAction);
  
@@ -34,7 +38,7 @@ MainWindow::MainWindow() {
   move(30, 50);
  //---
 
-  session = new TransmRpcSession(NULL, NULL, NULL);
+  session = new TransmRpcSession(NULL, NULL, NULL, this);
   
   readSettings();
 
@@ -200,5 +204,9 @@ void MainWindow::applySettings(QString h, QString p, QString u) {
   //qDebug() << "R_u: " << u;
   session->setConnectionSettings(h, p, u);
   writeSettings();
+  refreshTorrentsList();
+};
+
+void MainWindow::refreshTorrentsList() {
   session->getTorrentsList();
 };

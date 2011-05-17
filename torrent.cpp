@@ -39,7 +39,7 @@ Torrent::Torrent(Json::Value j) {
   Size = j.get("totalSize", "0").asUInt64();
   Name = j.get("name", "").asString();
 
-qDebug() << "Name: " << Name.c_str();
+//qDebug() << "Name: " << Name.c_str();
 
   Json::Value f = j["files"];
 

@@ -6,8 +6,12 @@
 #include <QBuffer>
 #include <sstream>
 #include <QDebug>
+#include <QtGui>
 
-TransmRpcSession::TransmRpcSession(QString h = "127.0.0.1", QString p = "9091", QString u = "/transmission/rpc/") {
+TransmRpcSession::TransmRpcSession(QString h = "127.0.0.1", QString p = "9091", QString u = "/transmission/rpc/", QWidget *par = 0) {
+  
+  parent = par;
+
   if(h != NULL) host = h;
   else host = "127.0.0.1";
   if(p != NULL) port = p;
@@ -73,7 +77,8 @@ int TransmRpcSession::getTorrentsList(unsigned int *ids){
 
 void TransmRpcSession::dataReceived(bool error) {
   if(error) {
-    qDebug() << "Error recieving data!" << http->errorString();
+    QMessageBox::warning(parent, tr("TranRem"), tr("Error recieving data!"), QMessageBox::Ok );
+    //qDebug() << "Error recieving data!" << http->errorString();
     emit errorSignal(dataRecievingError);
   }
   else {
@@ -93,7 +98,8 @@ void TransmRpcSession::dataReceived(bool error) {
 		    emit errorSignal(parsingError);
 	  break;
 	  default:
-	  qDebug() << "Response status code: " << http->lastResponse().statusCode();
+    QMessageBox::warning(parent, tr("TranRem"), tr("Response status code: %1").arg(http->lastResponse().statusCode()), QMessageBox::Ok );
+	  //qDebug() << "Response status code: " << http->lastResponse().statusCode();
 	  response->close();
 	  response->buffer().clear();
 	  emit errorSignal(connectionError);
@@ -108,16 +114,18 @@ bool TransmRpcSession::parseRequestData() {
   Json::Value torrentsValue;
 
   if(!reader.parse(response->buffer().data(), root)) {
-	qDebug() << "Error parsong JSON data!";
-	return false;
+    QMessageBox::warning(parent, tr("TranRem"), tr("Error parsong JSON data!"), QMessageBox::Ok );
+	  //qDebug() << "Error parsong JSON data!";
+	  return false;
   }
 
 //  qDebug() << "Respose: " << response->buffer().data();
 
   torrentsValue = root["arguments"]["torrents"];
   if(torrentsValue.isNull()) {
-	qDebug() << "Request doesn't contains 'torretns' part!";
-	return false;
+    QMessageBox::warning(parent, tr("TranRem"), tr("Request doesn't contains 'torretns' part!"), QMessageBox::Ok );
+	  //qDebug() << "Request doesn't contains 'torretns' part!";
+	  return false;
   }
 
   Torrent *torrent;
@@ -125,6 +133,7 @@ bool TransmRpcSession::parseRequestData() {
   Result = root.get("result", "none").asString().c_str();
   Tag = root.get("tag", "0").asUInt();
 
+  Torrents.clear();
   unsigned int i;
   for(i=0;i<torrentsValue.size();i++) {
     torrent = new Torrent(torrentsValue[i]);

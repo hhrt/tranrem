@@ -16,6 +16,7 @@ class MainWindow : public QMainWindow {
   QMenu *fileMenu;
   QAction *exitAction; 
   QAction *changeSettingsAction;
+  QAction *refreshTorrentsListAction;
   TransmRpcSession *session;
   SettingsDialog *settingsDialog;
 
@@ -35,6 +36,7 @@ class MainWindow : public QMainWindow {
   void successHandler();
   void changeSettings();
   void applySettings(QString h, QString p, QString u);
+  void refreshTorrentsList();
 
 };
 

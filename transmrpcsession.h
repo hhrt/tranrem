@@ -18,7 +18,7 @@ class TransmRpcSession : public QObject {
   Q_OBJECT
 
   public:
-  TransmRpcSession(QString h, QString p, QString u);
+  TransmRpcSession(QString h, QString p, QString u, QWidget * parent);
   void setConnectionSettings(QString h, QString p, QString u);
   int getTorrentsList(unsigned int *ids = NULL);
   std::vector<Torrent> *torrents();
@@ -31,6 +31,7 @@ class TransmRpcSession : public QObject {
 
 
   private:
+  QWidget *parent;
   std::vector<Torrent> Torrents;
   QHttp *http;
   QBuffer *response;
