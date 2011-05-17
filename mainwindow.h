@@ -5,14 +5,20 @@
 #include "transmrpcsession.h"
 
 class QTableWidget;
+class QTabWidget;
 class SettingsDialog;
+class QLabel;
 
 class MainWindow : public QMainWindow {
 
   Q_OBJECT
 
   private:
+  QWidget *centralWidget;
   QTableWidget *torrentsTable;
+  QTabWidget *torrentInfoTabWidget;
+  QWidget *filesInfoWidget;
+    QTableWidget *filesTable;
   QMenu *fileMenu;
   QAction *exitAction; 
   QAction *changeSettingsAction;
@@ -37,6 +43,7 @@ class MainWindow : public QMainWindow {
   void changeSettings();
   void applySettings(QString h, QString p, QString u);
   void refreshTorrentsList();
+  void torrentSelected();
 
 };
 

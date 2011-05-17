@@ -7,11 +7,39 @@
 
 MainWindow::MainWindow() {
 
-  torrentsTable = new QTableWidget(this);
-  torrentsTable->setColumnCount(3);
+  centralWidget = new QWidget(this);
 
-  setCentralWidget(torrentsTable);
- 
+  torrentsTable = new QTableWidget(centralWidget);
+  torrentsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+  connect(torrentsTable, SIGNAL(itemSelectionChanged()), this, SLOT(torrentSelected()));
+  
+
+  filesInfoWidget = new QWidget();
+  filesTable = new QTableWidget(filesInfoWidget);
+  filesTable->setColumnCount(3);
+  filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+  QStringList labels;
+  labels.push_back("Name");
+  labels.push_back("Size");
+  labels.push_back("Completed");
+  filesTable->setHorizontalHeaderLabels(labels);
+  QVBoxLayout *filesInfoLayout = new QVBoxLayout();
+  filesInfoLayout->addWidget(filesTable);
+  filesInfoWidget->setLayout(filesInfoLayout);
+
+
+  torrentInfoTabWidget = new QTabWidget(centralWidget);
+  torrentInfoTabWidget->addTab(filesInfoWidget, "Files");
+  torrentInfoTabWidget->hide();
+
+  QVBoxLayout *mainLayout = new QVBoxLayout();
+  mainLayout->addWidget(torrentsTable, 7);
+  mainLayout->addWidget(torrentInfoTabWidget, 3);
+
+  centralWidget->setLayout(mainLayout);
+  setCentralWidget(centralWidget);
+  //-----------------------------------------------------------------------------------
+
   exitAction = new QAction(tr("&Exit"), this);
   exitAction->setShortcut(QKeySequence::Close);
   connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
@@ -48,7 +76,7 @@ MainWindow::MainWindow() {
   //qDebug() << "Fields: " << session->fields()->size();
 
   torrentsTable->setColumnCount(4);
-  QStringList labels;
+  labels.clear();
   labels.push_back("ID");
   labels.push_back("Name");
   labels.push_back("Progress");
@@ -209,4 +237,17 @@ void MainWindow::applySettings(QString h, QString p, QString u) {
 
 void MainWindow::refreshTorrentsList() {
   session->getTorrentsList();
+};
+
+void MainWindow::torrentSelected() {
+  int firstIndex;
+  if(!torrentsTable->selectedItems().isEmpty()) {
+    firstIndex = torrentsTable->selectedItems().first()->text().toInt() - 1;
+    int i;
+//    for(i=0;i< session->torrents()->at(i).
+    torrentInfoTabWidget->show();
+  }
+  else
+    //statusBar()->showMessage("");
+    torrentInfoTabWidget->hide();
 };
