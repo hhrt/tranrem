@@ -3,6 +3,7 @@
 #include <iostream>
 #include "transmrpcsession.h"
 #include "tags.h"
+#include "settings.h"
 
 MainWindow::MainWindow() {
 
@@ -14,9 +15,15 @@ MainWindow::MainWindow() {
   exitAction = new QAction(tr("&Exit"), this);
   exitAction->setShortcut(QKeySequence::Close);
   connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
+  changeSettingsAction = new QAction(tr("&Settings"), this);
+  changeSettingsAction->setShortcut(QKeySequence::Preferences);
+  connect(changeSettingsAction, SIGNAL(triggered()), this, SLOT(changeSettings()));
 
   fileMenu = menuBar()->addMenu(tr("&File"));
+  fileMenu->addAction(changeSettingsAction);
+  fileMenu->addSeparator();
   fileMenu->addAction(exitAction);
+ 
 
   statusBar()->showMessage("Runned.");
 
@@ -34,7 +41,7 @@ MainWindow::MainWindow() {
   connect(session, SIGNAL(errorSignal(int)), this, SLOT(errorHandler(int)));
   connect(session, SIGNAL(requestComplete()), this, SLOT(successHandler()));
 
-  qDebug() << "Fields: " << session->fields()->size();
+  //qDebug() << "Fields: " << session->fields()->size();
 
   torrentsTable->setColumnCount(4);
   QStringList labels;
@@ -47,7 +54,7 @@ MainWindow::MainWindow() {
 
   torrentsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-  qDebug() << "Headers:" << torrentsTable->columnCount();
+  //qDebug() << "Headers:" << torrentsTable->columnCount();
 
   int i;
   int fontSize;
@@ -58,6 +65,8 @@ MainWindow::MainWindow() {
   }
 
   session->getTorrentsList();
+
+  settingsDialog = NULL;
 
 };
 
@@ -96,6 +105,9 @@ void MainWindow::readSettings() {
 };
 
 void MainWindow::writeSettings() {
+  //qDebug() << "Host: " << session->h();
+  //qDebug() << "Port: " << session->p();
+  //qDebug() << "Url:  " << session->u();
   QSettings settings("EVNL", "tranrem");
   settings.setValue("host", session->h());
   settings.setValue("port", session->p());
@@ -103,7 +115,7 @@ void MainWindow::writeSettings() {
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-  writeSettings();
+  //filler
   event->accept();
 };
 
@@ -174,3 +186,19 @@ void MainWindow::addItem(int i, int j, const char *value) {
 
 };
 
+void MainWindow::changeSettings() {
+  if(!settingsDialog) {
+    settingsDialog = new SettingsDialog(session->h(), session->p(), session->u(), this);
+    connect(settingsDialog, SIGNAL(applyed(QString, QString, QString)), this, SLOT(applySettings(QString, QString, QString)));
+  }
+  settingsDialog->show();
+};
+
+void MainWindow::applySettings(QString h, QString p, QString u) {
+  //qDebug() << "R_h: " << h;
+  //qDebug() << "R_p: " << p;
+  //qDebug() << "R_u: " << u;
+  session->setConnectionSettings(h, p, u);
+  writeSettings();
+  session->getTorrentsList();
+};

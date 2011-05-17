@@ -5,6 +5,7 @@
 #include "transmrpcsession.h"
 
 class QTableWidget;
+class SettingsDialog;
 
 class MainWindow : public QMainWindow {
 
@@ -14,7 +15,9 @@ class MainWindow : public QMainWindow {
   QTableWidget *torrentsTable;
   QMenu *fileMenu;
   QAction *exitAction; 
+  QAction *changeSettingsAction;
   TransmRpcSession *session;
+  SettingsDialog *settingsDialog;
 
   void addItem(int i, int j, const char *value);
   void readSettings();
@@ -30,6 +33,8 @@ class MainWindow : public QMainWindow {
   public slots:
   void errorHandler(int errorCode);
   void successHandler();
+  void changeSettings();
+  void applySettings(QString h, QString p, QString u);
 
 };
 

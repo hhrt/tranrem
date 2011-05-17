@@ -58,6 +58,10 @@ int TransmRpcSession::getTorrentsList(unsigned int *ids){
   requestBodyTmp << " }, ";
   requestBodyTmp << "\"method\" : \"torrent-get\",\n \"tag\" : " << TORRENTSLIST << " }";
   //qDebug() << "Request: " << requestBodyTmp.str().c_str(); 
+  if(requestBody->isOpen()) {
+    requestBody->buffer().clear();
+    requestBody->close();
+  }
   requestBody->setData(requestBodyTmp.str().c_str());
   //-----------------------
 

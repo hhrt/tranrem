@@ -8,8 +8,8 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-HEADERS += mainwindow.h transmrpcsession.h ./include/json/*.h torrent.h
-SOURCES += main.cpp mainwindow.cpp transmrpcsession.cpp ./lib/*.cpp torrent.cpp
+HEADERS += mainwindow.h transmrpcsession.h ./include/json/*.h torrent.h settings.h
+SOURCES += main.cpp mainwindow.cpp transmrpcsession.cpp ./lib/*.cpp torrent.cpp settings.cpp
 
 QT += network
 
