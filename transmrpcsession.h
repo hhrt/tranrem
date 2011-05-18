@@ -21,6 +21,8 @@ class TransmRpcSession : public QObject {
   TransmRpcSession(QString h, QString p, QString u, QWidget * parent);
   void setConnectionSettings(QString h, QString p, QString u);
   int getTorrentsList(unsigned int *ids = NULL);
+  int stopTorrents(unsigned int *ids = NULL);
+  int startTorrents(unsigned int *ids = NULL);
   std::vector<Torrent> *torrents();
   unsigned int tag(); //Last response tag field
   QString result(); //Last response result field
@@ -47,6 +49,7 @@ class TransmRpcSession : public QObject {
   QStringList Fields;
   
   bool parseRequestData();
+  std::string generateJsonRequest(int tag, unsigned int *ids);
 
   private slots:
   void dataReceived(bool error);

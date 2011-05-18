@@ -144,3 +144,22 @@ bool Torrent::operator<(Torrent b) {
   return Id < b.id();
 };
 
+std::vector<FileStruct> *Torrent::files(){
+  return &Files;
+};
+
+std::string FileStruct::n(){
+  return name;
+};
+
+std::string FileStruct::l(){
+  std::ostringstream out;
+  out << length;
+  return out.str();
+};
+
+std::string FileStruct::b(){
+  std::ostringstream out;
+  out << bytesCompleted;
+  return out.str();
+};

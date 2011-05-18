@@ -10,6 +10,9 @@ struct FileStruct {
   std::string name;
   unsigned long int length;
   unsigned long int bytesCompleted;
+  std::string n();
+  std::string l();
+  std::string b();
 };
 
 class Torrent {
@@ -27,6 +30,7 @@ class Torrent {
   Torrent(int i, unsigned long int s, std::string n);
   Torrent(Json::Value j);
   Torrent();
+  std::vector<FileStruct> *files();
   unsigned int id();
   std::string idS();
   std::string size();

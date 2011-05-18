@@ -10,7 +10,6 @@ MainWindow::MainWindow() {
   centralWidget = new QWidget(this);
 
   torrentsTable = new QTableWidget(centralWidget);
-  torrentsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
   connect(torrentsTable, SIGNAL(itemSelectionChanged()), this, SLOT(torrentSelected()));
   
 
@@ -23,6 +22,12 @@ MainWindow::MainWindow() {
   labels.push_back("Size");
   labels.push_back("Completed");
   filesTable->setHorizontalHeaderLabels(labels);
+  filesTable->horizontalHeader()->setResizeMode(0, QHeaderView::Stretch);
+  filesTable->horizontalHeader()->setResizeMode(1, QHeaderView::ResizeToContents);
+  filesTable->horizontalHeader()->setResizeMode(2, QHeaderView::ResizeToContents);
+  filesTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+  filesTable->resizeRowsToContents();
   QVBoxLayout *filesInfoLayout = new QVBoxLayout();
   filesInfoLayout->addWidget(filesTable);
   filesInfoWidget->setLayout(filesInfoLayout);
@@ -49,12 +54,22 @@ MainWindow::MainWindow() {
   refreshTorrentsListAction = new QAction(tr("&Refresh"), this);
   refreshTorrentsListAction->setShortcut(QKeySequence::Refresh);
   connect(refreshTorrentsListAction, SIGNAL(triggered()), this, SLOT(refreshTorrentsList()));
+  stopAction = new QAction(tr("St&op"), this);
+  stopAction->setEnabled(false);
+
+  startAction = new QAction(tr("St&art"), this);
+  startAction->setEnabled(false);
 
   fileMenu = menuBar()->addMenu(tr("&File"));
   fileMenu->addAction(changeSettingsAction);
-  fileMenu->addAction(refreshTorrentsListAction);
   fileMenu->addSeparator();
   fileMenu->addAction(exitAction);
+
+  torrentMenu = menuBar()->addMenu(tr("&Torrent"));
+  torrentMenu->addAction(refreshTorrentsListAction);
+  torrentMenu->addSeparator();
+  torrentMenu->addAction(stopAction);
+  torrentMenu->addAction(startAction);
  
 
   statusBar()->showMessage("Runned.");
@@ -75,6 +90,7 @@ MainWindow::MainWindow() {
 
   //qDebug() << "Fields: " << session->fields()->size();
 
+  torrentsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
   torrentsTable->setColumnCount(4);
   labels.clear();
   labels.push_back("ID");
@@ -83,8 +99,11 @@ MainWindow::MainWindow() {
   labels.push_back("Peers");
   torrentsTable->setHorizontalHeaderLabels(labels);
   torrentsTable->verticalHeader()->hide();
-
   torrentsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  torrentsTable->horizontalHeader()->setResizeMode(0, QHeaderView::ResizeToContents);
+  torrentsTable->horizontalHeader()->setResizeMode(1, QHeaderView::Stretch);
+  torrentsTable->horizontalHeader()->setResizeMode(2, QHeaderView::ResizeToContents);
+  torrentsTable->horizontalHeader()->setResizeMode(3, QHeaderView::ResizeToContents);
 
   //qDebug() << "Headers:" << torrentsTable->columnCount();
 
@@ -190,32 +209,20 @@ void MainWindow::successHandler() {
     torrentsTable->setRowCount(session->torrents()->size());
     unsigned int i;
     for(i=0;i < session->torrents()->size(); i++) {
-      addItem(i, 0, session->torrents()->at(i).idS().c_str());
+      addItem(torrentsTable, i, 0, session->torrents()->at(i).idS().c_str());
 //      addItem(i, 1, session->torrents()->at(i).name().c_str());
-      addItem(i, 1, session->torrents()->at(i).name().c_str());
-      addItem(i, 2, (session->torrents()->at(i).downloadedSize() + "/" + session->torrents()->at(i).size() + " (" + session->torrents()->at(i).percentDone() + ")").c_str());
-      addItem(i, 3, session->torrents()->at(i).peersInfo().c_str());
+      addItem(torrentsTable, i, 1, session->torrents()->at(i).name().c_str());
+      addItem(torrentsTable, i, 2, (session->torrents()->at(i).downloadedSize() + "/" + session->torrents()->at(i).size() + " (" + session->torrents()->at(i).percentDone() + ")").c_str());
+      addItem(torrentsTable, i, 3, session->torrents()->at(i).peersInfo().c_str());
     }
     break;
   }
 };
 
-void MainWindow::addItem(int i, int j, const char *value) {
-  int fontSize;
-
+void MainWindow::addItem(QTableWidget *tbl, int i, int j, const char *value) {
   QTextCodec *codec = QTextCodec::codecForName("UTF8");
   QString str = codec->toUnicode(value);
-
-  torrentsTable->setItem(i ,j, new QTableWidgetItem(str));
-
-  if(torrentsTable->item(i, j)->font().pixelSize() == -1)
-    fontSize = torrentsTable->item(i, j)->font().pointSize();
-  else
-    fontSize = torrentsTable->item(i, j)->font().pixelSize();
-
-  if((str.size()+2)*fontSize > torrentsTable->columnWidth(j))
-    torrentsTable->setColumnWidth(j, (str.size())*fontSize);
-
+  tbl->setItem(i ,j, new QTableWidgetItem(str));
 };
 
 void MainWindow::changeSettings() {
@@ -236,6 +243,7 @@ void MainWindow::applySettings(QString h, QString p, QString u) {
 };
 
 void MainWindow::refreshTorrentsList() {
+  torrentsTable->clearContents();
   session->getTorrentsList();
 };
 
@@ -243,8 +251,14 @@ void MainWindow::torrentSelected() {
   int firstIndex;
   if(!torrentsTable->selectedItems().isEmpty()) {
     firstIndex = torrentsTable->selectedItems().first()->text().toInt() - 1;
-    int i;
-//    for(i=0;i< session->torrents()->at(i).
+    unsigned int i;
+    filesTable->clearContents();
+    filesTable->setRowCount(session->torrents()->at(firstIndex).files()->size());
+    for(i=0;i< session->torrents()->at(firstIndex).files()->size(); i++) {
+      addItem(filesTable, i, 0, session->torrents()->at(firstIndex).files()->at(i).n().c_str());
+      addItem(filesTable, i, 1, session->torrents()->at(firstIndex).files()->at(i).l().c_str());
+      addItem(filesTable, i, 2, session->torrents()->at(firstIndex).files()->at(i).b().c_str());
+    }
     torrentInfoTabWidget->show();
   }
   else

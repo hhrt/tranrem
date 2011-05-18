@@ -20,13 +20,17 @@ class MainWindow : public QMainWindow {
   QWidget *filesInfoWidget;
     QTableWidget *filesTable;
   QMenu *fileMenu;
+  QMenu *torrentMenu;
   QAction *exitAction; 
   QAction *changeSettingsAction;
   QAction *refreshTorrentsListAction;
+  QAction *pauseAction;
+  QAction *stopAction;
+  QAction *startAction;
   TransmRpcSession *session;
   SettingsDialog *settingsDialog;
 
-  void addItem(int i, int j, const char *value);
+  void addItem(QTableWidget *tbl, int i, int j, const char *value);
   void readSettings();
   void writeSettings();
 

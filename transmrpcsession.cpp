@@ -45,35 +45,57 @@ void TransmRpcSession::setConnectionSettings(QString h = NULL, QString p = NULL,
 };
 
 int TransmRpcSession::getTorrentsList(unsigned int *ids){
-  //json request genereting
-  std::ostringstream requestBodyTmp;//Fucking std::string doesn't concatenates with int!!!
-  requestBodyTmp << "{ \"arguments\" : { \"fields\" : [ ";
-  int i;
-  unsigned int j;
-  for(i=0;i<Fields.size()-1;i++) 
-    requestBodyTmp << "\"" << Fields[i].toAscii().data() << "\", ";
-  requestBodyTmp << "\"" << Fields[i].toAscii().data() << "\" ]";
-  if(ids != NULL) { //not test, may be bugged
-    requestBodyTmp << ", \"ids\" : [ ";
-    for(j=0;j<(sizeof(ids)/sizeof(int))-1;j++)
-      requestBodyTmp << ids[j] << ", ";
-    requestBodyTmp << ids[j] <<" ]";
-  }
-  requestBodyTmp << " }, ";
-  requestBodyTmp << "\"method\" : \"torrent-get\",\n \"tag\" : " << TORRENTSLIST << " }";
-  //qDebug() << "Request: " << requestBodyTmp.str().c_str(); 
   if(requestBody->isOpen()) {
     requestBody->buffer().clear();
     requestBody->close();
   }
-  requestBody->setData(requestBodyTmp.str().c_str());
-  //-----------------------
-
+  requestBody->setData(generateJsonRequest(TORRENTSLIST, ids).c_str());
   requestHeader.setRequest("POST", url);
   requestHeader.setValue(host, port);
   requestHeader.setValue("X-Transmission-Session-Id", transmSessionId);
   return http->request(requestHeader, requestBody, response);
 };
+
+std::string TransmRpcSession::generateJsonRequest(int tag, unsigned int *ids = NULL) {
+  std::ostringstream out;
+  int i;
+  unsigned int j;
+  std::string method;
+  switch(tag) {
+    case TORRENTSLIST:
+    method = "torrent-get";
+    break;
+    case TORRENTSSTOP:
+    method = "torrent-stop";
+    break;
+    case TORRENTSSTART:
+    method = "torrent-start";
+  }
+
+  out << "{ \"arguments\" : { ";
+  if(ids != NULL) {
+    out << "\"ids\" : [ ";
+    for(j=0;j<(sizeof(ids)/sizeof(int))-1;j++)
+      out << ids[j] << ", ";
+    out << ids[j] <<" ] ";
+  }
+  if(tag == TORRENTSLIST) {
+    if(ids != NULL)
+      out << ", ";
+    out << "\"fields\" : [ ";
+    for(i=0; i<Fields.size()-1;i++)
+      out << "\"" << Fields[i].toAscii().data() << "\", ";
+    out << "\"" << Fields[i].toAscii().data() << "\" ]";
+  }
+  out << " }, ";
+  out << "\"method\" : \"" << method << "\", ";
+  out << "\"tag\" : " << tag;
+  out << " } ";
+
+//  qDebug() << out.str().c_str();
+  return out.str();
+
+}
 
 void TransmRpcSession::dataReceived(bool error) {
   if(error) {
