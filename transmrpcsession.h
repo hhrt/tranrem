@@ -30,6 +30,7 @@ class TransmRpcSession : public QObject {
   QString h();
   QString p();
   QString u();
+  Torrent torrent(unsigned int id);
 
 
   private:

@@ -192,3 +192,10 @@ QString TransmRpcSession::p() {
 QString TransmRpcSession::u() {
   return url;
 };
+
+Torrent TransmRpcSession::torrent(unsigned int id) {
+  unsigned int i;
+  for(i=0; i<Torrents.size(); i++)
+    if(Torrents.at(i).id() == id) return Torrents.at(i);
+  throw "Id not found.";
+};

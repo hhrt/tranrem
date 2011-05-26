@@ -251,14 +251,15 @@ void MainWindow::torrentSelected() {
   try {
     int firstIndex;
     if(!torrentsTable->selectedItems().isEmpty()) {
-      firstIndex = torrentsTable->selectedItems().first()->text().toInt() - 1;
+      firstIndex = torrentsTable->item(torrentsTable->selectedItems().first()->row(), 0)->text().toInt();
       unsigned int i;
+//      qDebug() << "firstIndex: " << firstIndex;
       filesTable->clearContents();
-      filesTable->setRowCount(session->torrents()->at(firstIndex).files()->size());
-      for(i=0;i< session->torrents()->at(firstIndex).files()->size(); i++) {
-        addItem(filesTable, i, 0, session->torrents()->at(firstIndex).files()->at(i).n().c_str());
-        addItem(filesTable, i, 1, session->torrents()->at(firstIndex).files()->at(i).l().c_str());
-        addItem(filesTable, i, 2, session->torrents()->at(firstIndex).files()->at(i).b().c_str());
+      filesTable->setRowCount(session->torrent(firstIndex).files()->size());
+      for(i=0;i< session->torrent(firstIndex).files()->size(); i++) {
+        addItem(filesTable, i, 0, session->torrent(firstIndex).files()->at(i).n().c_str());
+        addItem(filesTable, i, 1, session->torrent(firstIndex).files()->at(i).l().c_str());
+        addItem(filesTable, i, 2, session->torrent(firstIndex).files()->at(i).b().c_str());
       }
       torrentInfoTabWidget->show();
     }
@@ -268,5 +269,8 @@ void MainWindow::torrentSelected() {
   }
   catch(std::exception &e) {
     qDebug() << "Exception: " << e.what();
+  }
+  catch(char *e) {
+    qDebug() << "Exception: " << e;
   }
 };
