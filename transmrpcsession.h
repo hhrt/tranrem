@@ -20,6 +20,7 @@ class TransmRpcSession : public QObject {
   public:
   TransmRpcSession(QString h, QString p, QString u, QWidget * parent);
   void setConnectionSettings(QString h, QString p, QString u);
+  int sendRequest(unsigned int tag, unsigned int *ids);
   int getTorrentsList(unsigned int *ids = NULL);
   int stopTorrents(unsigned int *ids = NULL);
   int startTorrents(unsigned int *ids = NULL);
@@ -31,6 +32,7 @@ class TransmRpcSession : public QObject {
   QString p();
   QString u();
   Torrent torrent(unsigned int id);
+  std::vector<int> selectedIds();
 
 
   private:

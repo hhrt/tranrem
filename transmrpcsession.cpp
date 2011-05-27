@@ -34,6 +34,7 @@ TransmRpcSession::TransmRpcSession(QString h = "127.0.0.1", QString p = "9091", 
   Fields.push_back("peersGettingFromUs");
   Fields.push_back("peersSendingToUs");
   Fields.push_back("percentDone");
+  Fields.push_back("status");
 
 };
 
@@ -44,16 +45,28 @@ void TransmRpcSession::setConnectionSettings(QString h = NULL, QString p = NULL,
   http->setHost(host, port.toInt());
 };
 
-int TransmRpcSession::getTorrentsList(unsigned int *ids){
+int TransmRpcSession::sendRequest(unsigned int tag, unsigned int *ids) {
   if(requestBody->isOpen()) {
     requestBody->buffer().clear();
     requestBody->close();
   }
-  requestBody->setData(generateJsonRequest(TORRENTSLIST, ids).c_str());
+  requestBody->setData(generateJsonRequest(tag, ids).c_str());
   requestHeader.setRequest("POST", url);
   requestHeader.setValue(host, port);
   requestHeader.setValue("X-Transmission-Session-Id", transmSessionId);
   return http->request(requestHeader, requestBody, response);
+};
+
+int TransmRpcSession::getTorrentsList(unsigned int *ids) {
+  return sendRequest(TORRENTSLIST, ids);
+};
+
+int TransmRpcSession::stopTorrents(unsigned int *ids) {
+  return sendRequest(TORRENTSSTOP, ids);
+};
+
+int TransmRpcSession::startTorrents(unsigned int *ids) {
+  return sendRequest(TORRENTSSTART, ids);
 };
 
 std::string TransmRpcSession::generateJsonRequest(int tag, unsigned int *ids = NULL) {
@@ -105,7 +118,7 @@ void TransmRpcSession::dataReceived(bool error) {
   }
   else {
     switch(http->lastResponse().statusCode()) {
-      case 409:
+    case 409:
 	  transmSessionId = http->lastResponse().value("X-Transmission-Session-Id");
 	  requestHeader.setValue("X-Transmission-Session-Id", transmSessionId);
 	  response->close();
@@ -141,26 +154,26 @@ bool TransmRpcSession::parseRequestData() {
 	  return false;
   }
 
-//  qDebug() << "Respose: " << response->buffer().data();
-
-  torrentsValue = root["arguments"]["torrents"];
-  if(torrentsValue.isNull()) {
-    QMessageBox::warning(parent, tr("TranRem"), tr("Request doesn't contains 'torretns' part!"), QMessageBox::Ok );
-	  //qDebug() << "Request doesn't contains 'torretns' part!";
-	  return false;
-  }
-
-  Torrent *torrent;
-
   Result = root.get("result", "none").asString().c_str();
   Tag = root.get("tag", "0").asUInt();
+//  qDebug() << "Respose: " << response->buffer().data();
+  if(Tag == TORRENTSLIST) {
+    torrentsValue = root["arguments"]["torrents"];
+    if(torrentsValue.isNull()) {
+      QMessageBox::warning(parent, tr("TranRem"), tr("Request doesn't contains 'torretns' part!"), QMessageBox::Ok );
+	    //qDebug() << "Request doesn't contains 'torretns' part!";
+	    return false;
+    }
 
-  Torrents.clear();
-  unsigned int i;
-  for(i=0;i<torrentsValue.size();i++) {
-    torrent = new Torrent(torrentsValue[i]);
-	  Torrents.push_back(*torrent);
-	  delete torrent;
+    Torrent *torrent;
+
+    Torrents.clear();
+    unsigned int i;
+    for(i=0;i<torrentsValue.size();i++) {
+      torrent = new Torrent(torrentsValue[i]);
+	    Torrents.push_back(*torrent);
+	    delete torrent;
+    }
   }
   return true;
 };

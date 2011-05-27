@@ -56,9 +56,10 @@ MainWindow::MainWindow() {
   connect(refreshTorrentsListAction, SIGNAL(triggered()), this, SLOT(refreshTorrentsList()));
   stopAction = new QAction(tr("St&op"), this);
   stopAction->setEnabled(false);
-
+  connect(stopAction, SIGNAL(triggered()), this, SLOT(stopTorrents()));
   startAction = new QAction(tr("St&art"), this);
   startAction->setEnabled(false);
+  connect(startAction, SIGNAL(triggered()), this, SLOT(startTorrents()));
 
   fileMenu = menuBar()->addMenu(tr("&File"));
   fileMenu->addAction(changeSettingsAction);
@@ -203,6 +204,7 @@ void MainWindow::errorHandler(int errorCode) {
 };
 
 void MainWindow::successHandler() {
+  statusBar()->showMessage(session->result());
   switch(session->tag()) {
     case TORRENTSLIST:
     statusBar()->showMessage("Torrent list recieved.");
@@ -215,6 +217,18 @@ void MainWindow::successHandler() {
       addItem(torrentsTable, i, 2, (session->torrents()->at(i).downloadedSize() + "/" + session->torrents()->at(i).size() + " (" + session->torrents()->at(i).percentDone() + ")").c_str());
       addItem(torrentsTable, i, 3, session->torrents()->at(i).peersInfo().c_str());
     }
+
+    if(!torrentsTableSelection.empty()) {
+      torrentsTable->clearSelection();
+      int i;
+      for(i=0;i<torrentsTableSelection.size();i++)
+        torrentsTable->selectionModel()->select(torrentsTableSelection.at(i), QItemSelectionModel::Current);
+    }
+
+    break;
+    case TORRENTSSTOP:
+    case TORRENTSSTART:
+    refreshTorrentsList();
     break;
   }
 };
@@ -243,15 +257,25 @@ void MainWindow::applySettings(QString h, QString p, QString u) {
 };
 
 void MainWindow::refreshTorrentsList() {
+//  torrentsTableSelection = torrentsTable->selectionModel()->selection();
   torrentsTable->clearContents();
   session->getTorrentsList();
 };
 
 void MainWindow::torrentSelected() {
+  torrentsTableSelection = torrentsTable->selectionModel()->selection().indexes();
   try {
     int firstIndex;
     if(!torrentsTable->selectedItems().isEmpty()) {
       firstIndex = torrentsTable->item(torrentsTable->selectedItems().first()->row(), 0)->text().toInt();
+      if(session->torrent(firstIndex).status() == (1 << 4)) {
+        startAction->setEnabled(true);
+        stopAction->setEnabled(false);
+      }
+      else {
+        startAction->setEnabled(false);
+        stopAction->setEnabled(true);
+      }
       unsigned int i;
 //      qDebug() << "firstIndex: " << firstIndex;
       filesTable->clearContents();
@@ -273,4 +297,34 @@ void MainWindow::torrentSelected() {
   catch(char *e) {
     qDebug() << "Exception: " << e;
   }
+};
+
+unsigned int *MainWindow::selectedIds() {
+  unsigned int *ids;
+  ids = new unsigned int[torrentsTable->selectedItems().size()/torrentsTable->columnCount()];
+  int i;
+  for(i=0;i<torrentsTable->selectedItems().size()/torrentsTable->columnCount();i++)
+    ids[i] = torrentsTable->item(torrentsTable->selectedItems().at(i)->row(), 0)->text().toInt();
+  if(ids==NULL) {
+    QMessageBox::warning(this, tr("tranrem"), tr("Can't determine selection."), QMessageBox::Ok);
+    return NULL;
+  }
+  else
+    return ids;
+};
+
+void MainWindow::startTorrents() {
+  unsigned int *ids = NULL;
+  ids = selectedIds();
+  session->startTorrents(ids);
+  delete [] ids;
+  ids = NULL;
+};
+
+void MainWindow::stopTorrents() {
+  unsigned int *ids = NULL;
+  ids = selectedIds();
+  session->stopTorrents(ids);
+  delete [] ids;
+  ids = NULL;
 };

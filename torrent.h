@@ -19,6 +19,7 @@ class Torrent {
 
   unsigned int Id;
   unsigned long int Size;
+  unsigned int Status;
   std::string Name;
   std::vector<FileStruct> Files;
   unsigned int PeersConnected;
@@ -32,6 +33,7 @@ class Torrent {
   Torrent();
   std::vector<FileStruct> *files();
   unsigned int id();
+  unsigned int status();
   std::string idS();
   std::string size();
   std::string name();

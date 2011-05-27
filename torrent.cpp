@@ -58,6 +58,9 @@ Torrent::Torrent(Json::Value j) {
   PeersGettingFromUs = j.get("peersGettingFromUs", "0").asUInt();
   PeersSendingToUs =   j.get("peersSendingToUs", "0").asUInt();
   PercentDone =        j.get("percentDone", "0").asDouble();
+  Status =             j.get("status", "0").asUInt();
+
+//  qDebug() << "ID: " << Id << " Status: " << j.get("status", "0").asUInt() << " Etalon: " << ( 1 << 1);
 
 };
 
@@ -162,4 +165,8 @@ std::string FileStruct::b(){
   std::ostringstream out;
   out << bytesCompleted;
   return out.str();
+};
+
+unsigned int Torrent::status() {
+  return Status;
 };
