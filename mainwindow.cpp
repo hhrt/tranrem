@@ -95,6 +95,7 @@ MainWindow::MainWindow() {
   torrentsTable->setColumnCount(4);
   labels.clear();
   labels.push_back("ID");
+  labels.push_back("S");
   labels.push_back("Name");
   labels.push_back("Progress");
   labels.push_back("Peers");
@@ -102,9 +103,10 @@ MainWindow::MainWindow() {
   torrentsTable->verticalHeader()->hide();
   torrentsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
   torrentsTable->horizontalHeader()->setResizeMode(0, QHeaderView::ResizeToContents);
-  torrentsTable->horizontalHeader()->setResizeMode(1, QHeaderView::Stretch);
-  torrentsTable->horizontalHeader()->setResizeMode(2, QHeaderView::ResizeToContents);
+  torrentsTable->horizontalHeader()->setResizeMode(1, QHeaderView::ResizeToContents);
+  torrentsTable->horizontalHeader()->setResizeMode(2, QHeaderView::Stretch);
   torrentsTable->horizontalHeader()->setResizeMode(3, QHeaderView::ResizeToContents);
+  torrentsTable->horizontalHeader()->setResizeMode(4, QHeaderView::ResizeToContents);
 
   //qDebug() << "Headers:" << torrentsTable->columnCount();
 
@@ -116,9 +118,14 @@ MainWindow::MainWindow() {
     torrentsTable->setColumnWidth(i, fontSize * ( torrentsTable->horizontalHeaderItem(i)->text().size() + 2 ));
   }
 
+  blockWindow();
   session->getTorrentsList();
 
   settingsDialog = NULL;
+
+  mutatorsTimer = new QTimer(this);
+  mutatorsTimer->setInterval(1000);
+  connect(mutatorsTimer, SIGNAL(timeout()), this, SLOT(makeRefresh()));
 
 };
 
@@ -200,35 +207,47 @@ void MainWindow::errorHandler(int errorCode) {
   }
 
   statusBar()->showMessage(msg); 
+  unblockWindow();
 
 };
 
 void MainWindow::successHandler() {
+  unblockWindow();
   statusBar()->showMessage(session->result());
   switch(session->tag()) {
     case TORRENTSLIST:
-    statusBar()->showMessage("Torrent list recieved.");
+    statusBar()->showMessage("Torrents list recieved.");
     torrentsTable->setRowCount(session->torrents()->size());
     unsigned int i;
     for(i=0;i < session->torrents()->size(); i++) {
       addItem(torrentsTable, i, 0, session->torrents()->at(i).idS().c_str());
-//      addItem(i, 1, session->torrents()->at(i).name().c_str());
-      addItem(torrentsTable, i, 1, session->torrents()->at(i).name().c_str());
-      addItem(torrentsTable, i, 2, (session->torrents()->at(i).downloadedSize() + "/" + session->torrents()->at(i).size() + " (" + session->torrents()->at(i).percentDone() + ")").c_str());
-      addItem(torrentsTable, i, 3, session->torrents()->at(i).peersInfo().c_str());
+      addItem(torrentsTable, i, 2, session->torrents()->at(i).name().c_str());
+      addItem(torrentsTable, i, 3, (session->torrents()->at(i).downloadedSize() + "/" + session->torrents()->at(i).size() + " (" + session->torrents()->at(i).percentDone() + ")").c_str());
+      addItem(torrentsTable, i, 4, session->torrents()->at(i).peersInfo().c_str());
+      if(session->torrents()->at(i).status() == (1 << 4)) { //paint row different color if torent is stopped
+        addItem(torrentsTable, i, 1, "P");
+        int j;
+        for(j=0;j<4;j++)
+          torrentsTable->item(i,j)->setBackground(Qt::darkGray);
+      }
+      else
+        addItem(torrentsTable, i, 1, "R");
+      torrentsTable->item(i, 1)->setTextAlignment(Qt::AlignCenter);
     }
 
     if(!torrentsTableSelection.empty()) {
       torrentsTable->clearSelection();
       int i;
-      for(i=0;i<torrentsTableSelection.size();i++)
-        torrentsTable->selectionModel()->select(torrentsTableSelection.at(i), QItemSelectionModel::Current);
+      for(i=0;i<torrentsTableSelection.size();i++) {
+        torrentsTable->selectionModel()->select(torrentsTableSelection.at(i), QItemSelectionModel::Select);
+      }
     }
 
     break;
     case TORRENTSSTOP:
     case TORRENTSSTART:
-    refreshTorrentsList();
+    blockWindow();
+    mutatorsTimer->start();
     break;
   }
 };
@@ -257,13 +276,13 @@ void MainWindow::applySettings(QString h, QString p, QString u) {
 };
 
 void MainWindow::refreshTorrentsList() {
-//  torrentsTableSelection = torrentsTable->selectionModel()->selection();
+  torrentsTableSelection = torrentsTable->selectionModel()->selection().indexes();
   torrentsTable->clearContents();
+  blockWindow();
   session->getTorrentsList();
 };
 
 void MainWindow::torrentSelected() {
-  torrentsTableSelection = torrentsTable->selectionModel()->selection().indexes();
   try {
     int firstIndex;
     if(!torrentsTable->selectedItems().isEmpty()) {
@@ -327,4 +346,20 @@ void MainWindow::stopTorrents() {
   session->stopTorrents(ids);
   delete [] ids;
   ids = NULL;
+};
+
+void MainWindow::makeRefresh() {
+  refreshTorrentsList();
+  mutatorsTimer->stop();
+};
+
+void MainWindow::blockWindow() {
+  QApplication::restoreOverrideCursor();
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+  setEnabled(false);
+};
+
+void MainWindow::unblockWindow() {
+  QApplication::restoreOverrideCursor();
+  setEnabled(true);
 };

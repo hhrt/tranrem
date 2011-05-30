@@ -31,7 +31,10 @@ class MainWindow : public QMainWindow {
   TransmRpcSession *session;
   SettingsDialog *settingsDialog;
   QModelIndexList torrentsTableSelection;
+  QTimer *mutatorsTimer;
   unsigned int *selectedIds();
+  void blockWindow();
+  void unblockWindow();
 
   void addItem(QTableWidget *tbl, int i, int j, const char *value);
   void readSettings();
@@ -53,6 +56,7 @@ class MainWindow : public QMainWindow {
   void torrentSelected();
   void startTorrents();
   void stopTorrents();
+  void makeRefresh();
 
 };
 

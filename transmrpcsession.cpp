@@ -46,6 +46,10 @@ void TransmRpcSession::setConnectionSettings(QString h = NULL, QString p = NULL,
 };
 
 int TransmRpcSession::sendRequest(unsigned int tag, unsigned int *ids) {
+  if(response->isOpen()) {
+    response->buffer().clear();
+    response->close();
+  }
   if(requestBody->isOpen()) {
     requestBody->buffer().clear();
     requestBody->close();
@@ -127,8 +131,15 @@ void TransmRpcSession::dataReceived(bool error) {
 	  break;
 	  case 200:
 	  response->seek(0);
-      if(parseRequestData())
+      if(parseRequestData()) {
         emit requestComplete();
+/*        //debug
+        qDebug() << "Tag: " << Tag << " Result: " << Result;
+        int i;
+        for(i=0;i<Torrents.size();i++)
+          qDebug() << "# " << i << " Status: " << Torrents.at(i).status(); 
+        //end debug   */
+      }
 	    else
 		    emit errorSignal(parsingError);
 	  break;
