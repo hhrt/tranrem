@@ -1,7 +1,7 @@
 #include <QtGui>
 #include <settings.h>
 
-SettingsDialog::SettingsDialog(QString h, QString p, QString u, QWidget *parent) : QDialog(parent) {
+SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent) {
 
   okButton = new QPushButton(tr("&OK"));
   connect(okButton, SIGNAL(clicked()), this, SLOT(okButtonClicked()));
@@ -9,12 +9,11 @@ SettingsDialog::SettingsDialog(QString h, QString p, QString u, QWidget *parent)
   cancelButton = new QPushButton(tr("&Cancel"));
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelButtonClicked()));
 
-  if(h!=NULL) host = h;
-  else host = "";
-  if(p!=NULL) port = p;
-  else port = "";
-  if(u!=NULL) url  = u;
-  else url  = "";
+  host = "";
+  port = "";
+  url  = "";
+  autoRefresh = Qt::Unchecked;
+  interval = 0;
 
   hostLineEdit = new QLineEdit();
   hostLineEdit->setText(host);
@@ -25,6 +24,16 @@ SettingsDialog::SettingsDialog(QString h, QString p, QString u, QWidget *parent)
   urlLineEdit  = new QLineEdit();
   urlLineEdit->setText(url);
   connect(urlLineEdit, SIGNAL(textChanged(QString)), this, SLOT(urlChanged(QString)));
+  intervalSpinBox = new QSpinBox();
+  intervalSpinBox->setMaximum(600);
+  intervalSpinBox->setMinimum(3);
+  intervalSpinBox->setValue(interval);
+  intervalSpinBox->setEnabled(false);
+  connect(intervalSpinBox, SIGNAL(valueChanged(int)), this, SLOT(intervalChanged(int)));
+  autoRefreshCheckBox = new QCheckBox();
+  autoRefreshCheckBox->setChangeState(autoRefresh); 
+  connect(autoRefreshCheckBox, SIGNAL(stateChanged(int)), this, SLOT(autoRefreshChanged(int)));
+  
 
   hostLabel = new QLabel(tr("Host name: "));
   hostLabel->setBuddy(hostLineEdit);
@@ -32,6 +41,11 @@ SettingsDialog::SettingsDialog(QString h, QString p, QString u, QWidget *parent)
   portLabel->setBuddy(portLineEdit);
   urlLabel  = new QLabel(tr("URL: "));
   urlLabel->setBuddy(urlLineEdit);
+  intervalLabel = new QLabel(tr("Interval: "));
+  intervalLabel->setBuddy(intervalSpinBox);
+  autoRefreshLabel = new QLable(tr("Auto Refresh: "));
+  autoRefreshLabel->setBuddy(autoRefreshCheckBox);
+
 
   //Layouts
   QHBoxLayout *buttonsLayout = new QHBoxLayout();
@@ -50,10 +64,20 @@ SettingsDialog::SettingsDialog(QString h, QString p, QString u, QWidget *parent)
   urlLayout->addWidget(urlLabel);
   urlLayout->addWidget(urlLineEdit);
 
+  QHBoxLayout *autoRefreshLayout = new QHBoxLayout();
+  autoRefreshLayout->addWidget(autoRefreshLabel);
+  autoRefreshLayout->addWidget(autoRefreshCheckBox);
+
+  QHBoxLayout *intervalLayout = new QHBoxLayout();
+  intervalLayout->addWidget(intervalLabel);
+  intervalLayout->addWidget(intervalSpinBox);
+
   QVBoxLayout *itemsLayout = new QVBoxLayout();
   itemsLayout->addLayout(hostLayout);
   itemsLayout->addLayout(portLayout);
   itemsLayout->addLayout(urlLayout);
+  itemsLayout->addLayout(autoRefreshLayout);
+  itemsLayout->addLayout(intervalLayout);
   
   QVBoxLayout *mainLayout = new QVBoxLayout();
   mainLayout->addLayout(itemsLayout);
@@ -85,4 +109,14 @@ void SettingsDialog::portChanged(QString p) {
 void SettingsDialog::urlChanged(QString u) {
   okButton->setEnabled(true);
   url = u;
+};
+
+void SettingsDialog::intervalChanged(int i) {
+  okButton->setEnabled(true);
+  interval = i;
+};
+
+void SettingsDialog::autoRefreshChanged(int a) {
+////!!!!!!!!!!!!!!!
+
 };

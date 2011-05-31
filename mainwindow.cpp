@@ -60,6 +60,10 @@ MainWindow::MainWindow() {
   startAction = new QAction(tr("St&art"), this);
   startAction->setEnabled(false);
   connect(startAction, SIGNAL(triggered()), this, SLOT(startTorrents()));
+  autoRefreshAction = new QAction(tr("Auto Refresh"), this);
+  autoRefreshAction->setCheckable(true);
+  autoRefreshAction->setChecked(false);
+  connect(autoRefreshAction, SIGNAL(triggered()), this, SLOT(changeAutoRefresh()));
 
   fileMenu = menuBar()->addMenu(tr("&File"));
   fileMenu->addAction(changeSettingsAction);
@@ -68,6 +72,8 @@ MainWindow::MainWindow() {
 
   torrentMenu = menuBar()->addMenu(tr("&Torrent"));
   torrentMenu->addAction(refreshTorrentsListAction);
+  torrentMenu->addSeparator();
+  torrentMenu->addAction(autoRefreshAction);
   torrentMenu->addSeparator();
   torrentMenu->addAction(stopAction);
   torrentMenu->addAction(startAction);
@@ -83,6 +89,9 @@ MainWindow::MainWindow() {
  //---
 
   session = new TransmRpcSession(NULL, NULL, NULL, this);
+
+  autoRefreshTimer = new QTimer();
+  connect(autoRefreshTimer, SIGNAL(timeout()), this, SLOT(autoRefresh()));
   
   readSettings();
 
@@ -134,6 +143,7 @@ void MainWindow::readSettings() {
   QString host;
   QString port;
   QString url;
+  int timeout=3000;
   bool askUser = false;
 
   if(settings.contains("host"))
@@ -161,6 +171,11 @@ void MainWindow::readSettings() {
 
   session->setConnectionSettings(host, port, url);
 
+  if(settings.contains("timeout"))
+    timeout = settings.value("timeout").toInt();
+
+  autoRefreshTimer->setInterval(timeout);
+
 };
 
 void MainWindow::writeSettings() {
@@ -171,10 +186,12 @@ void MainWindow::writeSettings() {
   settings.setValue("host", session->h());
   settings.setValue("port", session->p());
   settings.setValue("url", session->u());
+  settings.setValue("timeout", autoRefreshTimer->interval());
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
   //filler
+  writeSettings();
   event->accept();
 };
 
@@ -242,6 +259,9 @@ void MainWindow::successHandler() {
         torrentsTable->selectionModel()->select(torrentsTableSelection.at(i), QItemSelectionModel::Select);
       }
     }
+
+    if(autoRefreshAction->isChecked())
+      autoRefreshTimer->start();
 
     break;
     case TORRENTSSTOP:
@@ -362,4 +382,16 @@ void MainWindow::blockWindow() {
 void MainWindow::unblockWindow() {
   QApplication::restoreOverrideCursor();
   setEnabled(true);
+};
+
+void MainWindow::autoRefresh() {
+  refreshTorrentsList();
+  autoRefreshTimer->stop();
+};
+
+void MainWindow::changeAutoRefresh() {
+  if(autoRefreshAction->isChecked())
+    autoRefreshTimer->start();
+  else
+    autoRefreshTimer->stop();
 };

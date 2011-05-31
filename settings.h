@@ -6,6 +6,8 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class QString;
+class QCheckBox;
+class QSpinBox;
 
 class SettingsDialog : public QDialog
 {
@@ -13,7 +15,7 @@ class SettingsDialog : public QDialog
   Q_OBJECT
 
   public:
-  SettingsDialog(QString h = NULL, QString p = NULL, QString u = NULL, QWidget *parent = 0);
+  SettingsDialog(QWidget *parent = 0);
 
   signals:
   void applyed(QString h, QString p, QString u);
@@ -23,14 +25,20 @@ class SettingsDialog : public QDialog
   QLabel *hostLabel;
   QLabel *portLabel;
   QLabel *urlLabel;
+  QLabel *intervalLabel;
+  QLabel *autoRefreshLable;
   QLineEdit *hostLineEdit;
   QLineEdit *portLineEdit;
   QLineEdit *urlLineEdit;
+  QSpinBox *intervalSpinBox;
+  QCheckBox *autoRefreshCheckBox;
   QPushButton *okButton;
   QPushButton *cancelButton;
   QString host;
   QString port;
   QString url;
+  int interval;
+  int autoRefresh;
 
   private slots:
   void okButtonClicked();
@@ -38,6 +46,8 @@ class SettingsDialog : public QDialog
   void hostChanged(QString h);
   void portChanged(QString p);
   void urlChanged(QString u);
+  void intervalChanged(int i);
+  void autoRefreshChanged(int a);
 
 };
 

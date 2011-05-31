@@ -28,10 +28,12 @@ class MainWindow : public QMainWindow {
   QAction *pauseAction;
   QAction *stopAction;
   QAction *startAction;
+  QAction *autoRefreshAction;
   TransmRpcSession *session;
   SettingsDialog *settingsDialog;
   QModelIndexList torrentsTableSelection;
   QTimer *mutatorsTimer;
+  QTimer *autoRefreshTimer;
   unsigned int *selectedIds();
   void blockWindow();
   void unblockWindow();
@@ -57,6 +59,8 @@ class MainWindow : public QMainWindow {
   void startTorrents();
   void stopTorrents();
   void makeRefresh();
+  void autoRefresh();
+  void changeAutoRefresh();
 
 };
 
