@@ -60,11 +60,11 @@ MainWindow::MainWindow() {
   startAction = new QAction(tr("St&art"), this);
   startAction->setEnabled(false);
   connect(startAction, SIGNAL(triggered()), this, SLOT(startTorrents()));
-  autoRefreshAction = new QAction(tr("Auto Refresh"), this);
+/*  autoRefreshAction = new QAction(tr("Auto Refresh"), this);
   autoRefreshAction->setCheckable(true);
   autoRefreshAction->setChecked(false);
   connect(autoRefreshAction, SIGNAL(triggered()), this, SLOT(changeAutoRefresh()));
-
+*/
   fileMenu = menuBar()->addMenu(tr("&File"));
   fileMenu->addAction(changeSettingsAction);
   fileMenu->addSeparator();
@@ -72,8 +72,6 @@ MainWindow::MainWindow() {
 
   torrentMenu = menuBar()->addMenu(tr("&Torrent"));
   torrentMenu->addAction(refreshTorrentsListAction);
-  torrentMenu->addSeparator();
-  torrentMenu->addAction(autoRefreshAction);
   torrentMenu->addSeparator();
   torrentMenu->addAction(stopAction);
   torrentMenu->addAction(startAction);
@@ -119,14 +117,6 @@ MainWindow::MainWindow() {
 
   //qDebug() << "Headers:" << torrentsTable->columnCount();
 
-  int i;
-  int fontSize;
-
-  for(i=0;i < torrentsTable->columnCount();i++) {
-    fontSize = torrentsTable->horizontalHeaderItem(i)->font().pointSize() != -1 ? torrentsTable->horizontalHeaderItem(i)->font().pointSize() : torrentsTable->horizontalHeaderItem(i)->font().pixelSize();
-    torrentsTable->setColumnWidth(i, fontSize * ( torrentsTable->horizontalHeaderItem(i)->text().size() + 2 ));
-  }
-
   blockWindow();
   session->getTorrentsList();
 
@@ -164,15 +154,26 @@ void MainWindow::readSettings() {
     url = "/transmission/rpc";
     askUser = true;
   }
+  if(settings.contains("autoRefresh"))
+    autoRefreshState = settings.value("autoRefresh").toBool();
+  else {
+    autoRefreshState = true;
+    askUser = true;
+  }
+  if(settings.contains("timeout"))
+    timeout = settings.value("timeout").toInt() * 1000;
+    if(timeout<3000 && timeout>600000)
+      timeout = 3000;
+  else {
+    timeout = 3000;
+    askUser = true;
+  }
 
   if(askUser) {
     //filler
   }
 
   session->setConnectionSettings(host, port, url);
-
-  if(settings.contains("timeout"))
-    timeout = settings.value("timeout").toInt();
 
   autoRefreshTimer->setInterval(timeout);
 
@@ -186,7 +187,8 @@ void MainWindow::writeSettings() {
   settings.setValue("host", session->h());
   settings.setValue("port", session->p());
   settings.setValue("url", session->u());
-  settings.setValue("timeout", autoRefreshTimer->interval());
+  settings.setValue("autoRefresh", autoRefreshState);
+  settings.setValue("timeout", autoRefreshTimer->interval()/1000);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
@@ -225,6 +227,8 @@ void MainWindow::errorHandler(int errorCode) {
 
   statusBar()->showMessage(msg); 
   unblockWindow();
+  autoRefreshState = false;
+  changeAutoRefresh();
 
 };
 
@@ -260,7 +264,10 @@ void MainWindow::successHandler() {
       }
     }
 
-    if(autoRefreshAction->isChecked())
+    if(settingsDialog != NULL)
+        autoRefreshState = settingsDialog->getAutoRefresh();
+
+    if(autoRefreshState)
       autoRefreshTimer->start();
 
     break;
@@ -280,19 +287,25 @@ void MainWindow::addItem(QTableWidget *tbl, int i, int j, const char *value) {
 
 void MainWindow::changeSettings() {
   if(!settingsDialog) {
-    settingsDialog = new SettingsDialog(session->h(), session->p(), session->u(), this);
-    connect(settingsDialog, SIGNAL(applyed(QString, QString, QString)), this, SLOT(applySettings(QString, QString, QString)));
+    settingsDialog = new SettingsDialog(this);
+    settingsDialog->setModal(true);
+    connect(settingsDialog, SIGNAL(applyed()), this, SLOT(applySettings()));
   }
+  settingsDialog->setHost(session->h());
+  settingsDialog->setPort(session->p());
+  settingsDialog->setUrl(session->u());
+  settingsDialog->setInterval(autoRefreshTimer->interval()/1000);
+  settingsDialog->setAutoRefresh(autoRefreshState);
   settingsDialog->show();
 };
 
-void MainWindow::applySettings(QString h, QString p, QString u) {
-  //qDebug() << "R_h: " << h;
-  //qDebug() << "R_p: " << p;
-  //qDebug() << "R_u: " << u;
-  session->setConnectionSettings(h, p, u);
+void MainWindow::applySettings() {
+  session->setConnectionSettings(settingsDialog->getHost(), settingsDialog->getPort(), settingsDialog->getUrl());
+  autoRefreshState = settingsDialog->getAutoRefresh();
+  autoRefreshTimer->setInterval(settingsDialog->getInterval() * 1000);
   writeSettings();
   refreshTorrentsList();
+  changeAutoRefresh();
 };
 
 void MainWindow::refreshTorrentsList() {
@@ -390,7 +403,7 @@ void MainWindow::autoRefresh() {
 };
 
 void MainWindow::changeAutoRefresh() {
-  if(autoRefreshAction->isChecked())
+  if(autoRefreshState)
     autoRefreshTimer->start();
   else
     autoRefreshTimer->stop();

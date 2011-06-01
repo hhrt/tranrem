@@ -13,7 +13,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent) {
   port = "";
   url  = "";
   autoRefresh = Qt::Unchecked;
-  interval = 0;
+  interval = 3;
 
   hostLineEdit = new QLineEdit();
   hostLineEdit->setText(host);
@@ -31,7 +31,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent) {
   intervalSpinBox->setEnabled(false);
   connect(intervalSpinBox, SIGNAL(valueChanged(int)), this, SLOT(intervalChanged(int)));
   autoRefreshCheckBox = new QCheckBox();
-  autoRefreshCheckBox->setChangeState(autoRefresh); 
+  autoRefreshCheckBox->setCheckState(autoRefresh); 
   connect(autoRefreshCheckBox, SIGNAL(stateChanged(int)), this, SLOT(autoRefreshChanged(int)));
   
 
@@ -43,7 +43,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent) {
   urlLabel->setBuddy(urlLineEdit);
   intervalLabel = new QLabel(tr("Interval: "));
   intervalLabel->setBuddy(intervalSpinBox);
-  autoRefreshLabel = new QLable(tr("Auto Refresh: "));
+  autoRefreshLabel = new QLabel(tr("Auto Refresh: "));
   autoRefreshLabel->setBuddy(autoRefreshCheckBox);
 
 
@@ -87,7 +87,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent) {
 };
 
 void SettingsDialog::okButtonClicked() {
-  emit applyed(host, port, url);
+  emit applyed();
   hide();
 };
 
@@ -117,6 +117,68 @@ void SettingsDialog::intervalChanged(int i) {
 };
 
 void SettingsDialog::autoRefreshChanged(int a) {
-////!!!!!!!!!!!!!!!
-
+  okButton->setEnabled(true);
+  if(a == Qt::Unchecked) {
+    intervalSpinBox->setEnabled(false);
+    interval = 3;
+  }
+  else {
+    intervalSpinBox->setEnabled(true);
+    interval = intervalSpinBox->value();
+  }
 };
+
+QString SettingsDialog::getHost() {
+  return host;
+};
+
+QString SettingsDialog::getPort() {
+  return port;
+};
+
+QString SettingsDialog::getUrl() {
+  return url;
+};
+
+int SettingsDialog::getInterval() {
+  return interval;
+};
+
+bool SettingsDialog::getAutoRefresh() {
+  if(autoRefreshCheckBox->checkState() == Qt::Unchecked)
+    return false;
+  else
+    return true;
+};
+
+void SettingsDialog::setHost(QString h) {
+  host = h;
+};
+
+void SettingsDialog::setPort(QString p) {
+  port = p;
+};
+
+void SettingsDialog::setUrl(QString u) {
+  url = u;
+};
+
+void SettingsDialog::setInterval(int i) {
+  interval = i;
+};
+
+void SettingsDialog::setAutoRefresh(bool a) {
+  if(a)
+    autoRefresh = Qt::Checked;
+  else
+    autoRefresh = Qt::Unchecked;
+};
+
+void SettingsDialog::showEvent(QShowEvent *event) {
+  hostLineEdit->setText(host);
+  portLineEdit->setText(port);
+  urlLineEdit->setText(url);
+  intervalSpinBox->setValue(interval);
+  autoRefreshCheckBox->setCheckState(autoRefresh);
+};
+

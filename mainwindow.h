@@ -34,9 +34,11 @@ class MainWindow : public QMainWindow {
   QModelIndexList torrentsTableSelection;
   QTimer *mutatorsTimer;
   QTimer *autoRefreshTimer;
+  bool autoRefreshState;
   unsigned int *selectedIds();
   void blockWindow();
   void unblockWindow();
+  void changeAutoRefresh();
 
   void addItem(QTableWidget *tbl, int i, int j, const char *value);
   void readSettings();
@@ -53,14 +55,13 @@ class MainWindow : public QMainWindow {
   void errorHandler(int errorCode);
   void successHandler();
   void changeSettings();
-  void applySettings(QString h, QString p, QString u);
+  void applySettings();
   void refreshTorrentsList();
   void torrentSelected();
   void startTorrents();
   void stopTorrents();
   void makeRefresh();
   void autoRefresh();
-  void changeAutoRefresh();
 
 };
 

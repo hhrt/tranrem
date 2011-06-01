@@ -17,8 +17,20 @@ class SettingsDialog : public QDialog
   public:
   SettingsDialog(QWidget *parent = 0);
 
+  QString getHost();
+  QString getPort();
+  QString getUrl();
+  int     getInterval();
+  bool    getAutoRefresh();
+
+  void setHost(QString p);
+  void setPort(QString h);
+  void setUrl(QString u);
+  void setInterval(int i);
+  void setAutoRefresh(bool a);
+
   signals:
-  void applyed(QString h, QString p, QString u);
+  void applyed();
   void canceled();
 
   private:
@@ -26,7 +38,7 @@ class SettingsDialog : public QDialog
   QLabel *portLabel;
   QLabel *urlLabel;
   QLabel *intervalLabel;
-  QLabel *autoRefreshLable;
+  QLabel *autoRefreshLabel;
   QLineEdit *hostLineEdit;
   QLineEdit *portLineEdit;
   QLineEdit *urlLineEdit;
@@ -38,7 +50,7 @@ class SettingsDialog : public QDialog
   QString port;
   QString url;
   int interval;
-  int autoRefresh;
+  Qt::CheckState autoRefresh;
 
   private slots:
   void okButtonClicked();
@@ -48,6 +60,9 @@ class SettingsDialog : public QDialog
   void urlChanged(QString u);
   void intervalChanged(int i);
   void autoRefreshChanged(int a);
+
+  protected:
+  void showEvent(QShowEvent *event);
 
 };
 
