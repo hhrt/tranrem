@@ -241,19 +241,34 @@ void MainWindow::successHandler() {
     torrentsTable->setRowCount(session->torrents()->size());
     unsigned int i;
     for(i=0;i < session->torrents()->size(); i++) {
-      addItem(torrentsTable, i, 0, session->torrents()->at(i).idS().c_str());
-      addItem(torrentsTable, i, 2, session->torrents()->at(i).name().c_str());
-      addItem(torrentsTable, i, 3, (session->torrents()->at(i).downloadedSize() + "/" + session->torrents()->at(i).size() + " (" + session->torrents()->at(i).percentDone() + ")").c_str());
-      addItem(torrentsTable, i, 4, session->torrents()->at(i).peersInfo().c_str());
-      if(session->torrents()->at(i).status() == (1 << 4)) { //paint row different color if torent is stopped
-        addItem(torrentsTable, i, 1, "P");
-        int j;
-        for(j=0;j<4;j++)
-          torrentsTable->item(i,j)->setBackground(Qt::darkGray);
+      if(!torrentsTable->findItems(session->torrents()->at(i).idS().c_str(), Qt::MatchFixedString).isEmpty()) {
+//        qDebug() << "ID: " << session->torrents()->at(i).idS().c_str() << " alredy exists in table.";
+        int rowIndex = torrentsTable->findItems(session->torrents()->at(i).idS().c_str(), Qt::MatchFixedString).first()->row();
+        if(session->torrents()->at(i).status() == (1 << 4))
+          torrentsTable->item(rowIndex, 1)->setText("P");
+        else
+          torrentsTable->item(rowIndex, 1)->setText("S");
+
+        if(torrentsTable->item(rowIndex, 2)->text() != * (new QString(session->torrents()->at(i).name().c_str())))
+          torrentsTable->item(rowIndex, 1)->setText(session->torrents()->at(i).name().c_str());
+
+
       }
-      else
-        addItem(torrentsTable, i, 1, "R");
-      torrentsTable->item(i, 1)->setTextAlignment(Qt::AlignCenter);
+      else {
+        addItem(torrentsTable, i, 0, session->torrents()->at(i).idS().c_str());
+        addItem(torrentsTable, i, 2, session->torrents()->at(i).name().c_str());
+        addItem(torrentsTable, i, 3, (session->torrents()->at(i).downloadedSize() + "/" + session->torrents()->at(i).size() + " (" + session->torrents()->at(i).percentDone() + ")").c_str());
+        addItem(torrentsTable, i, 4, session->torrents()->at(i).peersInfo().c_str());
+        if(session->torrents()->at(i).status() == (1 << 4)) { //paint row different color if torent is stopped
+          addItem(torrentsTable, i, 1, "P");
+          int j;
+          for(j=0;j<4;j++)
+            torrentsTable->item(i,j)->setBackground(Qt::darkGray);
+        } 
+        else
+          addItem(torrentsTable, i, 1, "R");
+        torrentsTable->item(i, 1)->setTextAlignment(Qt::AlignCenter);
+      }
     }
 
     if(!torrentsTableSelection.empty()) {
@@ -310,8 +325,9 @@ void MainWindow::applySettings() {
 
 void MainWindow::refreshTorrentsList() {
   torrentsTableSelection = torrentsTable->selectionModel()->selection().indexes();
-  torrentsTable->clearContents();
-  blockWindow();
+//  torrentsTable->clearContents();
+//  blockWindow();
+  statusBar()->showMessage("Refreshing...");
   session->getTorrentsList();
 };
 
